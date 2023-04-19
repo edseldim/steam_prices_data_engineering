@@ -1,2 +1,4 @@
-/Data/
+/Data/.gitignore
 *.log
+__pycache__
+.venv
