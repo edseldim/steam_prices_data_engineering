@@ -25,10 +25,10 @@ def main():
     save_data_checkpoint("usd_rates_reference.txt", price_data)
     save_data_checkpoint("videogames_id_reference.txt", videogame_urls_processed)
     usd_rates = obtain_usd_rates(price_data)
-    checkpoint_game_id, checkpoint_index = checkpoint_data_extraction()
-    game_data = retrieve_steam_data(videogame_urls_processed, usd_rates, checkpoint_game_id, checkpoint_index)
+    checkpoint_game_id, checkpoint_index = checkpoint_data_extraction(logger=logger)
+    game_data = retrieve_steam_data(videogame_urls_processed, usd_rates, checkpoint_game_id, checkpoint_index, logger=logger)
     steam_prices_df = pd.read_json(json.dumps(game_data)).T
-    steam_prices_df.to_excel("Data/list_1_processed_again.xlsx")
+    steam_prices_df.to_excel("Data/list_processed.xlsx")
 
 if __name__ == "__main__":
     main()
