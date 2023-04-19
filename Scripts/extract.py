@@ -10,8 +10,18 @@ from undetected_chromedriver import Chrome, ChromeOptions
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
+# set up a logger for file
+logger = logging.getLogger("extract")
+handler1 = logging.FileHandler('Scripts/Logs/logger1.log')
+formatter1 = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler1.setFormatter(formatter1)
+logger.addHandler(handler1)
+if logger.hasHandlers():
+    logger.handlers.clear()
+    logger.addHandler(handler1)
+logger.setLevel(logging.DEBUG)
 
-def extract_list_videogames(browser, logger=logging.getLogger("extract"), list_number=1):
+def extract_list_videogames(browser, logger=logger, list_number=1):
 
     """extracts games' ids from a website with a games id ordered list
         Parameters:
@@ -98,7 +108,7 @@ def get_price_data():
     browser.close()
     return price_data
 
-def checkpoint_data_extraction(logger=logging.getLogger("extract")):
+def checkpoint_data_extraction(logger=logger):
 
     checkpoint_data = {}
     try:
@@ -112,7 +122,7 @@ def checkpoint_data_extraction(logger=logging.getLogger("extract")):
 
     return checkpoint_game_id, checkpoint_index
 
-def send_request(params, logger=logging.getLogger("extract")):
+def send_request(params, logger=logger):
 
     """ sends a request to steam store API with some params and sends back the retrieved data 
         Parameters:
@@ -128,7 +138,7 @@ def send_request(params, logger=logging.getLogger("extract")):
         logger.debug(f"request to {params.get('appids')} failed... {e}")
     return {} #send_request(params)
 
-def get_country_prices(usd_rates, params, logger=logging.getLogger("extract")):
+def get_country_prices(usd_rates, params, logger=logger):
 
     """ processes the data from the steam store API to obtain a game's price per country
         Parameters:

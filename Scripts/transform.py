@@ -7,6 +7,17 @@ import time
 
 from extract import send_request, get_country_prices
 
+# set up logger for file
+logger = logging.getLogger("transform")
+handler1 = logging.FileHandler('Scripts/Logs/logger1.log')
+formatter1 = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler1.setFormatter(formatter1)
+logger.addHandler(handler1)
+if logger.hasHandlers():
+    logger.handlers.clear()
+    logger.addHandler(handler1)
+logger.setLevel(logging.DEBUG)
+
 def process_country_prices(soup):
 
     """extracts the raw value and country tags and processes them into clean values
@@ -54,14 +65,14 @@ def obtain_usd_rates(price_data):
 
     return usd_rates
 
-def retrieve_steam_data(videogame_urls_processed, usd_rates, checkpoint_game_id, checkpoint_index, logger=logging.getLogger("transform")):
+def retrieve_steam_data(videogame_urls_processed, usd_rates, checkpoint_game_id, checkpoint_index, logger=logger, batch = 10, wait_time = 10):
     game_data = {}
     start = 0
     end = len(usd_rates.keys()) - 1
-    batch = 10
+    #batch = 10
     country_iso_codes = list(usd_rates.keys())
-    wait_time = 10
-    videogame_urls_processed = sorted([int(game_id) for game_id in videogame_urls_processed]) # for reproducibility purposes when loading the checkpoint
+    #wait_time = 10
+    videogame_urls_processed = sorted([int(re.findall(r"[0-9]+",game_id)[0]) for game_id in videogame_urls_processed]) # for reproducibility purposes when loading the checkpoint
     for game_id in videogame_urls_processed:
         if int(game_id) < int(checkpoint_game_id):
             continue # if game_id has already been processed, then ignore
