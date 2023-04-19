@@ -158,3 +158,15 @@ def get_country_prices(usd_rates, params, logger=logger):
     except Exception as e:
         logger.debug(f"execution for {params['cc']} and {params['appids']} failed. Sending NaN...")
     return (params["cc"],np.nan) # if the price couldn't be parsed, then send NaN
+
+def get_already_processed_data(filename, logger=logger):
+    try:
+        data_target = None
+        with open(filename, "r") as f:
+            data_target = json.load(f)
+    except FileNotFoundError:
+        logger.critical(f"file {filename} could not be found... exiting...")
+    except Exception as e:
+        logger.critical(f"{e}")
+    else:
+        return data_target
