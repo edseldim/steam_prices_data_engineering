@@ -22,7 +22,7 @@ def set_up_logger():
 def main():
     logger = set_up_logger()
 
-    if not Path("Data\\usd_rates_reference.txt").exists and not Path("Data\\videogames_id_reference.txt").exists: # if checkpoint has already been set, then skip initial setup
+    if (not Path("Data\\usd_rates_reference.txt").exists()) or (not Path("Data\\videogames_id_reference.txt").exists()): # if checkpoint has already been set, then skip initial setup
         videogame_urls_processed = get_list_reference()
         price_data = process_country_prices(get_price_data())
         save_data_checkpoint("usd_rates_reference.txt", price_data)
