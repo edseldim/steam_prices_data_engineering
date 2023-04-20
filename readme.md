@@ -6,7 +6,7 @@ Since this project is fed using data from different sources like the <a href="ht
 
 # Steam Prices ETL
 
-<img src="https://gyazo.com/a868e890bed750d12012fbd55dc192ca" alt="world map with steam prices"/>
+<img src="https://i.gyazo.com/a868e890bed750d12012fbd55dc192ca.png" alt="world map with steam prices"/>
 
 This is an ETL that uses different sources to gather data regarding steam prices worldwide. This is meant to be a personal project.
 
@@ -14,5 +14,5 @@ This is an ETL that uses different sources to gather data regarding steam prices
 
 1. <a href="https://www.google.com/intl/en-419/chrome/"> Install chrome </a>
 2. Install dependencies from ``requirements.txt``
-3. Run ``Scripts/etl_main.py``
+3. Run ``Scripts\etl_main.py``
 4. Run ``Notebooks\data_visualization_steam_prices.ipynb`` to generate the world map with steam prices
