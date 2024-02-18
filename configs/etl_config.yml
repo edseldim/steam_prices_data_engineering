@@ -1,0 +1,15 @@
+resources_etl:
+  chrome:
+    args: ["--disable-popup-blocking", "--headless", "--no-sandbox"]
+    kwargs: 
+      use_subprocess: true,
+      driver_executable_path: "",
+      version_main: 121
+  
+  source:
+    src_videogames_list_link: "",
+    src_videogame_usd_prices_link: ""
+
+  target:
+    trg_filename_available_tags: ""
+    trg_filename_usd_ex_rates: ""
