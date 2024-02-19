@@ -13,3 +13,17 @@ resources_etl:
   target:
     trg_filename_available_tags: ""
     trg_filename_usd_ex_rates: ""
+
+logging:
+  version: 1
+  formatters:
+    main_etl:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: main_etl
+      level: DEBUG
+  root:
+    level: DEBUG
+    handlers: [console]
