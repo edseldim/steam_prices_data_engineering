@@ -1,15 +1,31 @@
-resources_etl:
-  chrome:
-    args: ["--disable-popup-blocking", "--headless", "--no-sandbox"]
-    kwargs: 
-      use_subprocess: true
-      driver_executable_path: ""
-      version_main: 121
-  
+steam_web_api:
+  endpoint: "https://store.steampowered.com/api/appdetails/"
+
+currency_ex_api:
+  endpoint: "https://openexchangerates.org/api/latest.json"
+  app_token: YOUR_OPEN_EXCHANGE_RATES_KEY
+
+steam_prices_etl:
   source:
     src_videogames_list_link: ""
     src_videogame_usd_prices_link: ""
-
+    base_currency: "USD"
+    ex_currencies:
+      "ar": "ARS"
+      "tr": "TRY"
+      "ru": "RUB"
+      "br": "BRL"
+      "ua": "UAH"
+      "no": "NOK"
+      "cn": "CNY"
+      "co": "COP"
+      "kz": "KZT"
+      "za": "ZAR"
+      "mx": "MXN"
+      "in": "INR"
+      "uy": "UYU"
+      "cl": "CLP"
+    videogames_appids: [298110,552520,2369390,1245620,1238840,1091500,2138330,2239550,1174180,1811260,1547000,1546990,1546970,12210]
   target:
     trg_filename_available_tags: ""
     trg_filename_usd_ex_rates: ""
