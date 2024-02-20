@@ -10,17 +10,7 @@ from typing import NamedTuple
 from pandas import DataFrame
 
 """TODO:
-5. make the remaining method docs using google syntax
-
-SOLVED:
-
--- fix chrome session and make sure that it's safe not to handle the session closure
-    It required Chrome 121 to work (both the webdriver and chrome have to be the same version)
-
--- check how to handle the whole chrome session reusability issue:
-    Do I want it to be part of the classes  or having a function that does all the initializing
-
-    I used a class because I needed common pieces of code to be reused (for readability)"""
+5. make the remaining method docs using google syntax"""
 
 class SteamPricesETLSourceConfig(NamedTuple):
     src_videogames_list_link: str
@@ -91,7 +81,7 @@ class SteamPricesETL:
                     rate = ex_rate
                     currency = cc
                 _, usd_price = self.parse_app_price(app_price_str, rate, currency)
-                prices.append((country_code, currency, usd_price))
+                prices.append((app, country_code, currency, usd_price))
                 time.sleep(wait_time)
             self._logger.info(f"finished processing {app} prices")
         return prices
@@ -102,5 +92,5 @@ class SteamPricesETL:
         ex_rates = self.get_currency_rates(self.src_conf.base_currency,
                                            list(self.src_conf.ex_currencies.values()))
         prices = self.get_app_prices_per_app(ex_rates)
-        df = DataFrame(data=prices, columns=["country_iso", "currency_steam", "usd_price"])
+        df = DataFrame(data=prices, columns=["app", "country_iso", "currency_steam", "usd_price"])
         print(df)
