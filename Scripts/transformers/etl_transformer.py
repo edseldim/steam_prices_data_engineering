@@ -1,6 +1,5 @@
 import time
 import logging
-import bs4
 import re
 import numpy as np
 
@@ -12,6 +11,7 @@ from pandas import DataFrame
 """TODO:
 5. make the remaining method docs using google syntax"""
 
+
 class SteamPricesETLSourceConfig(NamedTuple):
     src_videogames_list_link: str
     src_videogame_usd_prices_link: str
@@ -19,9 +19,11 @@ class SteamPricesETLSourceConfig(NamedTuple):
     ex_currencies: str
     videogames_appids: str
 
+
 class SteamPricesETLTargetConfig(NamedTuple):
     trg_filename_available_tags: str
     trg_filename_usd_ex_rates: str
+
 
 class SteamPricesETL:
 
@@ -37,9 +39,10 @@ class SteamPricesETL:
         self.trg_conf = trg_conf
 
     # Extract
-    def get_currency_rates(self, base_currency: str, ex_currencies: str) -> dict:
+    def get_currency_rates(self, base_currency: str,
+                           ex_currencies: str) -> dict:
         ex_rates = self.ex_rates_api.get_ex_rates(base_currency,
-                                                   ex_currencies)
+                                                  ex_currencies)
         self._logger.debug(f"ex rates from api {ex_rates}")
         return ex_rates
 
@@ -81,7 +84,7 @@ class SteamPricesETL:
                     rate = ex_rate
                     currency = cc
                 _, usd_price = self.parse_app_price(app_price_str, rate, currency)
-                prices.append((app, country_code, currency, usd_price))
+                prices.append((app, country_code.lower(), currency.lower(), usd_price))
                 time.sleep(wait_time)
             self._logger.info(f"finished processing {app} prices")
         return prices
