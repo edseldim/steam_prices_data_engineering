@@ -3,7 +3,6 @@ import logging
 import re
 import numpy as np
 
-from transformers.utils import save, filter_default
 from common.external_resources import SteamWebApi, OpenExRatesApi
 from typing import NamedTuple
 from pandas import DataFrame
