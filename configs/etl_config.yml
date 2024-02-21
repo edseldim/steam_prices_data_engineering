@@ -3,7 +3,14 @@ steam_web_api:
 
 currency_ex_api:
   endpoint: "https://openexchangerates.org/api/latest.json"
-  app_token: YOUR_OPEN_EXCHANGE_RATES_KEY
+  app_token: 'YOUR_OPEN_EXCHANGE_RATES_KEY'
+
+s3_bucket:
+  endpoint_url: 'https://nyc3.digitaloceanspaces.com'
+  region_name: 'nyc3'
+  bucket_name: 'YOUR_BUCKETS_NAME'
+  aws_access_key_id: 'AWS_ACCESS_KEY_ID'
+  aws_secret_access_key: 'AWS_SECRET_ACCESS_KEY'
 
 steam_prices_etl:
   source:
