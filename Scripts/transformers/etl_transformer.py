@@ -108,4 +108,5 @@ class SteamPricesETL:
                                          ex_rates=ex_rates)
         df = DataFrame(data=prices, columns=["app", "country_iso", "currency_steam", "usd_price"])
         print(df.to_parquet())
-        self.s3.save_df_to_parquet(df, 'steam_etl/test_df_2.parquet')
+        todays_date = datetime.now().strftime("%m/%d/%Y-%H:%M:%S")
+        self.s3.save_df_to_parquet(df, f'steam_etl/steam_etl_run_{todays_date}.parquet')
