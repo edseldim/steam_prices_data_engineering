@@ -6,7 +6,9 @@ import argparse
 from transformers.etl_transformer import (SteamPricesETL,
                                           SteamPricesETLSourceConfig,
                                           SteamPricesETLTargetConfig)
-from common.external_resources import SteamWebApi, OpenExRatesApi
+from common.external_resources import (SteamWebApi,
+                                       OpenExRatesApi,
+                                       S3Bucket)
 
 
 def main():
@@ -24,6 +26,8 @@ def main():
     # api interfaces instances for extracting external data
     steam_api = SteamWebApi(**config["steam_web_api"])
     ex_rates_api = OpenExRatesApi(**config["currency_ex_api"])
+    # external storage
+    s3_bucket = S3Bucket(**config["s3_bucket"])
     # reading source configuration
     source_config = SteamPricesETLSourceConfig(**config["steam_prices_etl"]["source"])
     # reading target configuration
@@ -31,6 +35,7 @@ def main():
     logger.info("Resources ETL has started...")
     steam_prices_etl = SteamPricesETL(steam_api=steam_api,
                                       ex_rates_api=ex_rates_api,
+                                      s3_bucket=s3_bucket,
                                       src_conf=source_config,
                                       trg_conf=target_config)
     # running ETL job for the required ETL resources
