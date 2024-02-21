@@ -9,8 +9,8 @@ class SteamWebApi:
         self._logger = logging.getLogger(__name__)
         self.endpoint = endpoint
 
-    def get_app_price(self, app_id: int, base_currency: str = "us") -> tuple:
-        params = {"cc": base_currency, "appids": app_id}
+    def get_app_price(self, app_id: int, country_code: str = "us") -> tuple:
+        params = {"cc": country_code, "appids": app_id}
         self._logger.debug(f"Processing {self.endpoint} with params cc={params['cc']}&appids={params['appids']}")
         req = requests.get(self.endpoint, params=params)
         assert req.ok
