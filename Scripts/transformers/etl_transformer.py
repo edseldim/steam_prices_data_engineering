@@ -3,13 +3,15 @@ import logging
 import re
 import numpy as np
 
-from transformers.utils import save
+from transformers.utils import save, filter_default
 from common.external_resources import SteamWebApi, OpenExRatesApi
 from typing import NamedTuple
 from pandas import DataFrame
 
 """TODO:
-5. make the remaining method docs using google syntax"""
+1. make the remaining method docs using google syntax
+2. build save function
+"""
 
 
 class SteamPricesETLSourceConfig(NamedTuple):
@@ -43,6 +45,8 @@ class SteamPricesETL:
                            ex_currencies: str) -> dict:
         ex_rates = self.ex_rates_api.get_ex_rates(base_currency,
                                                   ex_currencies)
+        # rate is 1 because all prices are converted to usd
+        ex_rates.update({"USD": 1})
         self._logger.debug(f"ex rates from api {ex_rates}")
         return ex_rates
 
@@ -66,26 +70,30 @@ class SteamPricesETL:
             self._logger.debug(f"execution for {currency_name} failed. Sending NaN...")
         return (currency_name, np.nan)  # if the price couldn't be parsed, then send NaN
 
-    def get_app_prices_per_app(self, ex_rates, wait_time=3) -> list:
+    def get_prices_per_app(self,
+                           app_ids: list,
+                           currencies: dict,
+                           ex_rates: dict,
+                           wait_time=3) -> list:
         prices = list()
-        for app in self.src_conf.videogames_appids:
+        for app in app_ids:
             self._logger.info(f"started processing {app} prices")
-            for (cc, ex_rate) in ex_rates.items():
-                country_code = [country for country, currency in self.src_conf.ex_currencies.items() if currency.lower() == cc.lower()]
-                country_code = country_code[0] if len(country_code) > 0 else "us"
+            for (cc, currency_name) in currencies.items():
                 try:
-                    app_price_str, currency_name = self.steam_api.get_app_price(app, country_code)
-                except Exception:
-                    self._logger.error(f"{country_code} for {app} could not be processed... skipping...")
+                    app_price_str, steam_currency = self.steam_api.get_app_price(app_id=app,
+                                                                                 country_code=cc)
+                    # if country uses usd, then rate is 1
+                    rate = ex_rates.get(steam_currency.upper())
+                    # parse API price to get float value
+                    _, usd_price = self.parse_app_price(app_price_str, rate, steam_currency)
+                    prices.append((app, cc.lower(), steam_currency.lower(), usd_price))
+                    # wait X time to prevent DDoS
+                    time.sleep(wait_time)
+                except Exception as e:
+                    self._logger.error(f"{cc} for {app} could not be processed... skipping...")
+                    self._logger.error(f"{e}")
                     continue
-                rate = 1
-                currency = "usd"
-                if currency_name.lower() != "usd":
-                    rate = ex_rate
-                    currency = cc
-                _, usd_price = self.parse_app_price(app_price_str, rate, currency)
-                prices.append((app, country_code.lower(), currency.lower(), usd_price))
-                time.sleep(wait_time)
+
             self._logger.info(f"finished processing {app} prices")
         return prices
 
@@ -94,6 +102,8 @@ class SteamPricesETL:
         """ Use a dataframe for better formatting and save it """
         ex_rates = self.get_currency_rates(self.src_conf.base_currency,
                                            list(self.src_conf.ex_currencies.values()))
-        prices = self.get_app_prices_per_app(ex_rates)
+        prices = self.get_prices_per_app(app_ids=self.src_conf.videogames_appids,
+                                         currencies=self.src_conf.ex_currencies,
+                                         ex_rates=ex_rates)
         df = DataFrame(data=prices, columns=["app", "country_iso", "currency_steam", "usd_price"])
         print(df)
