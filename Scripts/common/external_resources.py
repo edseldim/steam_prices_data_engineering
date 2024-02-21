@@ -1,6 +1,32 @@
 import json
 import requests
 import logging
+import boto3
+import io
+import pandas as pd
+
+class S3Bucket:
+
+    def __init__(self,
+                 endpoint_url: str,
+                 region_name: str,
+                 aws_access_key_id: str,
+                 aws_secret_access_key: str,
+                 bucket_name: str):
+
+        self.endpoint_url = endpoint_url
+        self.region_name = region_name
+        self.bucket_name = bucket_name
+        self.session = boto3.session.Session(aws_access_key_id=aws_access_key_id,
+                                             aws_secret_access_key=aws_secret_access_key)
+        self.s3_session = self.session.client('s3', endpoint_url=endpoint_url, region_name=region_name)
+
+    def save_df_to_parquet(self, df: pd.DataFrame, key: str) -> bool:
+        df_buffer = io.BytesIO()
+        df.to_parquet(df_buffer, engine='auto', compression='snappy')
+        df_buffer.seek(0)
+        self.s3_session.upload_fileobj(df_buffer, self.bucket_name, key)
+        return True
 
 class SteamWebApi:
 
