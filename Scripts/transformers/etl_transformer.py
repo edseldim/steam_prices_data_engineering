@@ -3,7 +3,7 @@ import logging
 import re
 import numpy as np
 
-from common.external_resources import SteamWebApi, OpenExRatesApi
+from common.external_resources import SteamWebApi, OpenExRatesApi, S3Bucket
 from typing import NamedTuple
 from pandas import DataFrame
 
@@ -31,6 +31,7 @@ class SteamPricesETL:
     def __init__(self,
                  steam_api: SteamWebApi,
                  ex_rates_api: OpenExRatesApi,
+                 s3_bucket: S3Bucket,
                  src_conf: SteamPricesETLSourceConfig,
                  trg_conf: SteamPricesETLTargetConfig,):
         self._logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class SteamPricesETL:
         self.ex_rates_api = ex_rates_api
         self.src_conf = src_conf
         self.trg_conf = trg_conf
+        self.s3 = s3_bucket
 
     # Extract
     def get_currency_rates(self, base_currency: str,
@@ -105,4 +107,5 @@ class SteamPricesETL:
                                          currencies=self.src_conf.ex_currencies,
                                          ex_rates=ex_rates)
         df = DataFrame(data=prices, columns=["app", "country_iso", "currency_steam", "usd_price"])
-        print(df)
+        print(df.to_parquet())
+        self.s3.save_df_to_parquet(df, 'steam_etl/test_df_2.parquet')
