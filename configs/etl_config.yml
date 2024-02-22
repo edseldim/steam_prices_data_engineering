@@ -14,8 +14,6 @@ s3_bucket:
 
 steam_prices_etl:
   source:
-    src_videogames_list_link: ""
-    src_videogame_usd_prices_link: ""
     base_currency: "USD"
     ex_currencies:
       "ar": "ARS"
@@ -34,8 +32,12 @@ steam_prices_etl:
       "cl": "CLP"
     videogames_appids: [298110,552520,2369390,1245620,1238840,1091500,2138330,2239550,1174180,1811260,1547000,1546990,1546970,12210]
   target:
-    trg_filename_available_tags: ""
-    trg_filename_usd_ex_rates: ""
+    trg_key: 'steam_etl/'
+    trg_key_date_format: '%m%d%Y-%H:%M:%S'
+    trg_key_filename: 'steam_etl_run'
+    trg_format: 'parquet'
+    trg_cols: ['app', 'country_iso', 'currency_steam', 'usd_price']
+
 
 logging:
   version: 1
