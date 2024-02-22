@@ -2,6 +2,7 @@ import time
 import logging
 import re
 import numpy as np
+import pandas as pd
 
 from common.external_resources import SteamWebApi, OpenExRatesApi, S3Bucket
 from datetime import datetime
@@ -10,24 +11,52 @@ from pandas import DataFrame
 
 """TODO:
 1. make the remaining method docs using google syntax
-2. build save function
+2. Check the target conf in yaml (the target now is the bucket the etl points to)
 """
 
 
 class SteamPricesETLSourceConfig(NamedTuple):
-    src_videogames_list_link: str
-    src_videogame_usd_prices_link: str
+    """
+    Object that represents the source configuration for
+    SteamPricesETL
+
+
+    :param base_currency: base currency for exchange rates to be relative to
+    :param ex_currencies: currencies to get the exchange rates (for base currency)
+    :param videogames_appids: videogames to get the prices of in the different exchange
+                        currencies
+    """
+    # src_videogames_list_link: str
+    # src_videogame_usd_prices_link: str
     base_currency: str
     ex_currencies: str
     videogames_appids: str
 
 
 class SteamPricesETLTargetConfig(NamedTuple):
-    trg_filename_available_tags: str
-    trg_filename_usd_ex_rates: str
+    """
+    Represents the target configuration for
+    SteamPricesETL
+
+    :param trg_key: the folder inside the target storage service
+    :param trg_key_filename: the filename for the data to be stored
+    :param trg_key_date_format: the filename date format in target storage service
+                            this one is appended to the filename at the end
+    :param trg_format: the filename format for the data to be stored
+    :param trg_cols: columns included in the filename to be stored
+    """
+    trg_key: str
+    trg_key_date_format: str
+    trg_key_filename: str
+    trg_format: str
+    trg_cols: list
 
 
 class SteamPricesETL:
+    """
+    Extracts, transforms and loads steam games price data
+    for different countries
+    """
 
     def __init__(self,
                  steam_api: SteamWebApi,
@@ -35,6 +64,15 @@ class SteamPricesETL:
                  s3_bucket: S3Bucket,
                  src_conf: SteamPricesETLSourceConfig,
                  trg_conf: SteamPricesETLTargetConfig,):
+        """
+            Constructor for SteamPricesETL
+
+            :param steam_api: connection to steam market api
+            :param ex_rates_api: connection to exchange rates api
+            :param s3_bucket: connection to s3 bucket api
+            :param src_conf: NamedTuple class with source configuration data
+            :param trg_conf: NamedTuple class with target configuration data
+        """
         self._logger = logging.getLogger(__name__)
         self.steam_api = steam_api
         self.ex_rates_api = ex_rates_api
@@ -45,6 +83,15 @@ class SteamPricesETL:
     # Extract
     def get_currency_rates(self, base_currency: str,
                            ex_currencies: str) -> dict:
+        """
+        Reads currency exchange rates relative to base currency
+
+        :param base_currency: currency (ALPHA-3) exchange rates will be relative to
+        :param ex_currencies: currencies (ALPHA-3) to get exchange rate for (relative to base currency)
+
+        :returns:
+            dict: containing currency names (ALPHA-3) as key and exchange rates as values
+        """
         ex_rates = self.ex_rates_api.get_ex_rates(base_currency,
                                                   ex_currencies)
         # rate is 1 because all prices are converted to usd
@@ -57,6 +104,20 @@ class SteamPricesETL:
                         price_str: str,
                         ex_rate: float,
                         currency_name: str) -> tuple:
+        """
+        Parses steam market api app price data to float type and calculates the
+        exchange rate for currency
+
+        :param price_str: steam market api app price (raw data from api)
+        :param ex_rate: exchange rate to convert price from local currency (currency_name)
+                        to whatever the exchange rate is relative to
+        :param currency_name: currency name (ALPHA-2) for price_str
+
+        :returns:
+            tuple: first position as currency name (the same as the param), and
+                   second position as price in the currency the exchange rate is
+                   relative to
+        """
         try:
             price_formatted = re.findall(r"[0-9]+[,\. ]?[0-9]*", price_str)
             if price_formatted:
@@ -77,10 +138,24 @@ class SteamPricesETL:
                            currencies: dict,
                            ex_rates: dict,
                            wait_time=3) -> list:
+        """
+            Get prices for apps in the currencies the exchange rates are relative to
+
+            :param app_ids: list with the steam games id to get the price of in different currencies
+            :param currencies: dict containing the country code (ALPHA-2) and their currency
+                               names (ALPHA-3) as values
+            :param ex_rates: dict containing currency names (ALPHA-3) as key and exchange rates as values
+            :wait_time: time to wait between price extraction (to prevent DDoS attacks)
+
+            :returns:
+                list: items as tuples each containing the app_id, country code (ALPHA-2),
+                      currency steam uses for app_id in country and price in usd for
+                      country
+        """
         prices = list()
         for app in app_ids:
             self._logger.info(f"started processing {app} prices")
-            for (cc, currency_name) in currencies.items():
+            for (cc, _) in currencies.items():
                 try:
                     app_price_str, steam_currency = self.steam_api.get_app_price(app_id=app,
                                                                                  country_code=cc)
@@ -99,15 +174,40 @@ class SteamPricesETL:
             self._logger.info(f"finished processing {app} prices")
         return prices
 
+    def save_as_parquet_to_s3(self,
+                              df: pd.DataFrame,
+                              filename: str) -> bool:
+        """
+        Saves df to external storage service
+
+        :param df: Dataframe with the data to be stored
+        :param filename: string with the filename the DataFrame will be stored in.
+                         DO NOT ADD THE DATA TYPE SUFFIX (.parquet)
+
+        :returns:
+            bool: True if data was loaded correctly
+        """
+
+        self.s3.save_df_to_parquet(df, filename+".parquet")
+        return True
+
     # Load
     def generate_games_data(self):
-        """ Use a dataframe for better formatting and save it """
+        """
+            Builds steam app data for different countries and saves it
+            to external storage service
+        """
         ex_rates = self.get_currency_rates(self.src_conf.base_currency,
                                            list(self.src_conf.ex_currencies.values()))
         prices = self.get_prices_per_app(app_ids=self.src_conf.videogames_appids,
                                          currencies=self.src_conf.ex_currencies,
                                          ex_rates=ex_rates)
-        df = DataFrame(data=prices, columns=["app", "country_iso", "currency_steam", "usd_price"])
+        # fit data into dataframe
+        df = DataFrame(data=prices, columns=self.src_conf.trg_cols)
         print(df.to_parquet())
-        todays_date = datetime.now().strftime("%m%d%Y-%H:%M:%S")
-        self.s3.save_df_to_parquet(df, f'steam_etl/steam_etl_run_{todays_date}.parquet')
+        todays_date = datetime.now().strftime(self.src_conf.trg_key_date_format)
+        filename = f'{self.src_conf.trg_key}{self.src_conf.trg_key_filename}{todays_date}.parquet'
+        # save it
+        self.save_as_parquet_to_s3(df=df,
+                                   filename=filename)
+
