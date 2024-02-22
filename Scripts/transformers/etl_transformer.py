@@ -26,8 +26,6 @@ class SteamPricesETLSourceConfig(NamedTuple):
     :param videogames_appids: videogames to get the prices of in the different exchange
                               currencies
     """
-    # src_videogames_list_link: str
-    # src_videogame_usd_prices_link: str
     base_currency: str
     ex_currencies: str
     videogames_appids: str
@@ -210,4 +208,3 @@ class SteamPricesETL:
         # save it
         self.save_as_parquet_to_s3(df=df,
                                    filename=filename)
-
