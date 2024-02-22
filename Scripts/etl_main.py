@@ -13,6 +13,10 @@ from common.external_resources import (SteamWebApi,
 
 def main():
 
+    """
+    Executes the main pipeline flow
+    """
+
     # Parsing YAML file
     parser = argparse.ArgumentParser(description='Run the Xetra ETL job.')
     parser.add_argument('config', help='A configuration file in YAML format.')
