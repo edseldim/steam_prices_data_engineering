@@ -24,7 +24,7 @@ class SteamPricesETLSourceConfig(NamedTuple):
     :param base_currency: base currency for exchange rates to be relative to
     :param ex_currencies: currencies to get the exchange rates (for base currency)
     :param videogames_appids: videogames to get the prices of in the different exchange
-                        currencies
+                              currencies
     """
     # src_videogames_list_link: str
     # src_videogame_usd_prices_link: str
@@ -65,13 +65,13 @@ class SteamPricesETL:
                  src_conf: SteamPricesETLSourceConfig,
                  trg_conf: SteamPricesETLTargetConfig,):
         """
-            Constructor for SteamPricesETL
+        Constructor for SteamPricesETL
 
-            :param steam_api: connection to steam market api
-            :param ex_rates_api: connection to exchange rates api
-            :param s3_bucket: connection to s3 bucket api
-            :param src_conf: NamedTuple class with source configuration data
-            :param trg_conf: NamedTuple class with target configuration data
+        :param steam_api: connection to steam market api
+        :param ex_rates_api: connection to exchange rates api
+        :param s3_bucket: connection to s3 bucket api
+        :param src_conf: NamedTuple class with source configuration data
+        :param trg_conf: NamedTuple class with target configuration data
         """
         self._logger = logging.getLogger(__name__)
         self.steam_api = steam_api
@@ -139,18 +139,18 @@ class SteamPricesETL:
                            ex_rates: dict,
                            wait_time=3) -> list:
         """
-            Get prices for apps in the currencies the exchange rates are relative to
+        Gets prices for apps in the currencies the exchange rates are relative to
 
-            :param app_ids: list with the steam games id to get the price of in different currencies
-            :param currencies: dict containing the country code (ALPHA-2) and their currency
-                               names (ALPHA-3) as values
-            :param ex_rates: dict containing currency names (ALPHA-3) as key and exchange rates as values
-            :wait_time: time to wait between price extraction (to prevent DDoS attacks)
+        :param app_ids: list with the steam games id to get the price of in different currencies
+        :param currencies: dict containing the country code (ALPHA-2) and their currency
+                            names (ALPHA-3) as values
+        :param ex_rates: dict containing currency names (ALPHA-3) as key and exchange rates as values
+        :wait_time: time to wait between price extraction (to prevent DDoS attacks)
 
-            :returns:
-                list: items as tuples each containing the app_id, country code (ALPHA-2),
-                      currency steam uses for app_id in country and price in usd for
-                      country
+        :returns:
+            list: items as tuples each containing the app_id, country code (ALPHA-2),
+                    currency steam uses for app_id in country and price in usd for
+                    country
         """
         prices = list()
         for app in app_ids:
@@ -194,8 +194,8 @@ class SteamPricesETL:
     # Load
     def generate_games_data(self):
         """
-            Builds steam app data for different countries and saves it
-            to external storage service
+        Builds steam app data for different countries and saves it
+        to external storage service
         """
         ex_rates = self.get_currency_rates(self.src_conf.base_currency,
                                            list(self.src_conf.ex_currencies.values()))
