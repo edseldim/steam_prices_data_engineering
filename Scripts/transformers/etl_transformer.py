@@ -201,7 +201,7 @@ class SteamPricesETL:
                                          currencies=self.src_conf.ex_currencies,
                                          ex_rates=ex_rates)
         # fit data into dataframe
-        df = DataFrame(data=prices, columns=self.src_conf.trg_cols)
+        df = DataFrame(data=prices, columns=self.trg_conf.trg_cols)
         print(df.to_parquet())
         todays_date = datetime.now().strftime(self.src_conf.trg_key_date_format)
         filename = f'{self.src_conf.trg_key}{self.src_conf.trg_key_filename}{todays_date}.parquet'
