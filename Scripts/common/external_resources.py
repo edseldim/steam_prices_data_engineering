@@ -5,6 +5,8 @@ import boto3
 import io
 import pandas as pd
 
+from matplotlib.figure import Figure
+
 class S3Bucket:
 
     """
