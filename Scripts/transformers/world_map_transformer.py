@@ -134,8 +134,9 @@ class WorldMapETL:
 
     def save_current_fig(self,
                          fig: Figure,
-                         filename: str):
-        self.s3_bucket.save_fig_to_png(fig, filename)
+                         filename: str,
+                         format="png"):
+        self.s3_bucket.save_fig_to_png(fig, filename+"."+format)
 
     def generate_world_map_image(self):
         self._logger.info(f"Looking up last file in {self.src_conf.parquet_key}")
@@ -147,8 +148,8 @@ class WorldMapETL:
                                                    last_processed_file,
                                                    f)
         df = pd.read_parquet(f)
-        prices_df = self.calculate_countries_averages(df=df.copy())
-        world_map_df = self.get_geospatial_df(geo_data_url=self.src_conf.iso_codes_map_url)
+        prices_df = self.calculate_countries_averages(df.copy())
+        world_map_df = self.get_geospatial_df(geo_data_url=self.src_conf.iso_code_map)
         merged_df = self.merge_geodata_with_prices(country_price_df=prices_df.copy(),
                                                    geospatial_df=world_map_df.copy())
         fig = self.get_world_map(merged_df=merged_df.copy())
@@ -156,4 +157,5 @@ class WorldMapETL:
         todays_date = datetime.now().strftime(self.trg_conf.trg_key_date_format)
         filename = f'{self.trg_conf.trg_key}{self.trg_conf.trg_key_filename}{todays_date}'
         self.save_current_fig(fig=fig,
-                              filename=filename)
+                              filename=filename,
+                              format=self.trg_conf.trg_format)
