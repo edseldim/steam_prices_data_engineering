@@ -1,5 +1,4 @@
 import io
-import datetime
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -9,6 +8,7 @@ from babel.numbers import get_territory_currencies
 from common.external_resources import S3Bucket
 from Scripts.transformers.steam_prices_transformer import SteamPricesETLTargetConfig
 from matplotlib.figure import Figure
+from datetime import datetime
 
 """
 TODO:
@@ -137,9 +137,9 @@ class WorldMapETL:
         last_processed_file = self.s3_bucket.get_bucket_filenames(bucket_name=self.s3_bucket.bucket_name,
                                                                   prefix=self.trg_conf.trg_key)[0]
         f = io.BytesIO()
-        self.s3_session.download_fileobj(self.s3_bucket.bucket_name,
-                                         last_processed_file,
-                                         f)
+        self.s3_bucket.s3_session.download_fileobj(self.s3_bucket.bucket_name,
+                                                   last_processed_file,
+                                                   f)
         df = pd.read_parquet(f)
         prices_df = self.calculate_countries_averages(df=df.copy())
         world_map_df = self.get_geospatial_df(geo_data_url=self.src_conf.iso_codes_map_url)
