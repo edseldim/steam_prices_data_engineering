@@ -1,4 +1,5 @@
 import io
+import logging
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -50,6 +51,7 @@ class WorldMapETL:
         self.src_conf = src_conf
         self.trg_conf = trg_conf
         self.s3_bucket = s3_bucket
+        self._logger = logging.getLogger(__name__)
 
     def calculate_countries_averages(df: pd.DataFrame):
         country_means_df = df[["country_iso", "usd_price"]] \
@@ -136,8 +138,10 @@ class WorldMapETL:
         self.s3_bucket.save_fig_to_png(fig, filename)
 
     def generate_world_map_image(self):
+        self._logger.info(f"Looking up last file in {self.src_conf.parquet_key}")
         last_processed_file = self.s3_bucket.get_bucket_filenames(bucket_name=self.s3_bucket.bucket_name,
-                                                                  prefix=self.trg_conf.trg_key)[0]
+                                                                  prefix=self.src_conf.parquet_key)[0]
+        self._logger.info(f"Downloading {last_processed_file}...")
         f = io.BytesIO()
         self.s3_bucket.s3_session.download_fileobj(self.s3_bucket.bucket_name,
                                                    last_processed_file,
