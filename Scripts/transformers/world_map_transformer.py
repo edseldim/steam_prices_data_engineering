@@ -21,6 +21,12 @@ class WorldMapETLSourceConfig(NamedTuple):
     WorldMapETL
 
     """
+    world_map_geopandas: str
+    iso_code_map: str
+    iso_code_map_cols: str
+    plot_title: str
+    missing_countries_plot_args: dict
+    world_map_prices_plot_args: dict
 
 
 class WorldMapETLTargetConfig(NamedTuple):
@@ -29,6 +35,10 @@ class WorldMapETLTargetConfig(NamedTuple):
     WorldMapETL
 
     """
+    trg_key: str
+    trg_key_date_format: str
+    trg_key_filename: str
+    trg_format: str
 
 class WorldMapETL:
 
