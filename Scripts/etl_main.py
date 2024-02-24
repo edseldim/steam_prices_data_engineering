@@ -3,7 +3,7 @@ import logging.config
 import yaml
 import argparse
 
-from transformers.etl_transformer import (SteamPricesETL,
+from Scripts.transformers.steam_prices_transformer import (SteamPricesETL,
                                           SteamPricesETLSourceConfig,
                                           SteamPricesETLTargetConfig)
 from common.external_resources import (SteamWebApi,
