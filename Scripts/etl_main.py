@@ -55,13 +55,11 @@ def main():
 
     # World Map ETL Execution
     logger.info("WorldMapETL has started...")
-    steam_prices_etl = SteamPricesETL(steam_api=steam_api,
-                                      ex_rates_api=ex_rates_api,
-                                      s3_bucket=s3_bucket,
-                                      src_conf=world_map_etl_src_config,
-                                      trg_conf=world_map_etl_trg_config)
+    world_map_etl = WorldMapETL(s3_bucket=s3_bucket,
+                                src_conf=world_map_etl_src_config,
+                                trg_conf=world_map_etl_trg_config)
     # running ETL job for the required ETL Steam
-    steam_prices_etl.generate_games_data()
+    world_map_etl.generate_world_map_image()
     logger.info("WorldMapETL has finished...")
 
 
