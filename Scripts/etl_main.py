@@ -3,9 +3,9 @@ import logging.config
 import yaml
 import argparse
 
-from Scripts.transformers.steam_prices_transformer import (SteamPricesETL,
-                                          SteamPricesETLSourceConfig,
-                                          SteamPricesETLTargetConfig)
+from transformers.steam_prices_transformer import (SteamPricesETL,
+                                                   SteamPricesETLSourceConfig,
+                                                   SteamPricesETLTargetConfig)
 from common.external_resources import (SteamWebApi,
                                        OpenExRatesApi,
                                        S3Bucket)
