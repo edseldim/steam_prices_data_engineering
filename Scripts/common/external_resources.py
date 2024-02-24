@@ -49,6 +49,32 @@ class S3Bucket:
         self.s3_session.upload_fileobj(df_buffer, self.bucket_name, key)
         return True
 
+    def save_fig_to_png(self, fig: Figure, key: str) -> bool:
+        """
+        Handles S3 bucket connection to save dataframes
+
+        :param df: DataFrame with the data to be saved
+        :param key: string path in bucket where data is going to be located in (containing filename too)
+
+        :returns:
+            bool: True if data was loaded successfully
+        """
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format="png")
+        buffer.seek(0)
+        self.s3_session.upload_fileobj(buffer, self.bucket_name, key)
+        return True
+
+    def get_bucket_filenames(self,
+                             bucket_name: str,
+                             prefix: str) -> list:
+        filenames = []
+        result = self.s3_session.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        result = result['Contents']
+        result = sorted(result, key=lambda d: d['LastModified'], reverse=True)
+        filenames = [file_content["Key"] for file_content in result]
+        return filenames
+
 class SteamWebApi:
 
     """
