@@ -69,12 +69,19 @@ class S3Bucket:
 
     def get_bucket_filenames(self,
                              bucket_name: str,
-                             prefix: str) -> list:
+                             prefix: str,
+                             same_level=True,
+                             delimiter="/") -> list:
         filenames = []
-        result = self.s3_session.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-        result = result['Contents']
+        api_res = self.s3_session.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)
+        result = api_res['Contents']
         result = sorted(result, key=lambda d: d['LastModified'], reverse=True)
         filenames = [file_content["Key"] for file_content in result]
+        if same_level:
+            sub_prefixes = api_res["CommonPrefixes"]
+            sub_prefixes = [sub_prefix.get("Prefix") for sub_prefix in sub_prefixes]
+            is_file_in_sub_prefix = lambda file: any(sub_prefix in file for sub_prefix in sub_prefixes)
+            filenames = list(filter(lambda file: not is_file_in_sub_prefix(file), filenames))
         return filenames
 
 class SteamWebApi:
