@@ -62,7 +62,7 @@ world_map_etl:
   target:
     trg_key: 'steam_etl/images/'
     trg_key_date_format: '%m%d%Y-%H:%M:%S'
-    trg_key_filename: 'steam_etl_run'
+    trg_key_filename: 'world_map_run'
     trg_format: 'png'
 
 logging:
