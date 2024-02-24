@@ -9,6 +9,7 @@ from common.external_resources import S3Bucket
 from Scripts.transformers.steam_prices_transformer import SteamPricesETLTargetConfig
 from matplotlib.figure import Figure
 from datetime import datetime
+from typing import NamedTuple
 
 """
 TODO:
@@ -21,6 +22,7 @@ class WorldMapETLSourceConfig(NamedTuple):
     Object that represents the source configuration for
     WorldMapETL
     """
+    parquet_key: str
     world_map_geopandas: str
     iso_code_map: str
     iso_code_map_cols: str
