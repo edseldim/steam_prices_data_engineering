@@ -52,7 +52,7 @@ class WorldMapETL:
         self.s3_bucket = s3_bucket
         self._logger = logging.getLogger(__name__)
 
-    def calculate_countries_averages(df: pd.DataFrame):
+    def calculate_countries_averages(self, df: pd.DataFrame):
         country_means_df = df[["country_iso", "usd_price"]] \
                         .groupby("country_iso") \
                         .agg({"usd_price": "mean"})
@@ -64,7 +64,7 @@ class WorldMapETL:
         country_means_df["country_iso"] = country_means_df["country_iso"].str.upper()
         return country_means_df.copy()
 
-    def get_geospatial_df(geo_data_url: str):
+    def get_geospatial_df(self, geo_data_url: str):
         world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
         # create a lookup table to map iso_2_codes and iso_3_codes
         iso_lookup = pd.read_csv(geo_data_url, usecols=['alpha-3', 'alpha-2'])
@@ -89,13 +89,14 @@ class WorldMapETL:
 
         return world.copy()
 
-    def merge_geodata_with_prices(country_price_df: pd.DataFrame,
+    def merge_geodata_with_prices(self,
+                                  country_price_df: pd.DataFrame,
                                   geospatial_df):
         country_price_df["country_iso"] = country_price_df["country_iso"].str.upper()
         merged_df = geospatial_df.merge(country_price_df, left_on='iso_a2', right_on='country_iso')
         return merged_df.copy()
 
-    def get_world_map(merged_df: pd.DataFrame):
+    def get_world_map(self, merged_df: pd.DataFrame):
         missing_countries = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
         missing_countries["steam_value"] = 0
         # Create a custom colormap that ranges from green to red
