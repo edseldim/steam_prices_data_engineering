@@ -38,6 +38,32 @@ steam_prices_etl:
     trg_format: 'parquet'
     trg_cols: ['app', 'country_iso', 'currency_steam', 'usd_price']
 
+world_map_etl:
+  source:
+    world_map_geopandas: "naturalearth_lowres"
+    iso_code_map: "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv"
+    iso_code_map_cols: ['alpha-3', 'alpha-2']
+    plot_title: "Steam prices relative to world average in USD"
+    missing_countries_plot_args:
+      column: "steam_value"
+      color: "gray"
+      linestyle: '-'
+      edgecolor: 'black'
+      alpha: 0.5
+    world_map_prices_plot_args:
+      column: 'usd_dif'
+      cmap: cmap
+      norm: norm
+      cax: cax
+      linewidth: 0.5
+      linestyle: '-'
+      edgecolor: 'black'
+      legend: True
+  target:
+    trg_key: 'steam_etl/images/'
+    trg_key_date_format: '%m%d%Y-%H:%M:%S'
+    trg_key_filename: 'steam_etl_run'
+    trg_format: 'png'
 
 logging:
   version: 1
