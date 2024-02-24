@@ -118,5 +118,26 @@ class WorldMapETL:
         ax.set_title("Steam prices relative to world average in USD")
         return ax.get_figure()
 
-    def save_current_fig(self, fig: Figure):
-        self.s3_bucket.save_fig_to_png(fig, self.trg_conf.trg_key+"images/testing_png.png")
+    def save_current_fig(self,
+                         fig: Figure,
+                         filename: str):
+        self.s3_bucket.save_fig_to_png(fig, filename)
+
+    def generate_world_map_image(self):
+        last_processed_file = self.s3_bucket.get_bucket_filenames(bucket_name=self.s3_bucket.bucket_name,
+                                                                  prefix=self.trg_conf.trg_key)[0]
+        f = io.BytesIO()
+        self.s3_session.download_fileobj(self.s3_bucket.bucket_name,
+                                         last_processed_file,
+                                         f)
+        df = pd.read_parquet(f)
+        prices_df = self.calculate_countries_averages(df=df.copy())
+        world_map_df = self.get_geospatial_df(geo_data_url=self.src_conf.iso_codes_map_url)
+        merged_df = self.merge_geodata_with_prices(country_price_df=prices_df.copy(),
+                                                   geospatial_df=world_map_df.copy())
+        fig = self.get_world_map(merged_df=merged_df.copy())
+
+        todays_date = datetime.now().strftime(self.trg_conf.trg_key_date_format)
+        filename = f'{self.trg_conf.trg_key}{self.trg_conf.trg_key_filename}{todays_date}'
+        self.save_current_fig(fig=fig,
+                              filename=filename)
