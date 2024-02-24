@@ -1,4 +1,5 @@
 import io
+import datetime
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -19,7 +20,6 @@ class WorldMapETLSourceConfig(NamedTuple):
     """
     Object that represents the source configuration for
     WorldMapETL
-
     """
     world_map_geopandas: str
     iso_code_map: str
@@ -33,7 +33,6 @@ class WorldMapETLTargetConfig(NamedTuple):
     """
     Represents the target configuration for
     WorldMapETL
-
     """
     trg_key: str
     trg_key_date_format: str
@@ -69,7 +68,8 @@ class WorldMapETL:
         iso_lookup = iso_lookup.set_index('alpha-3')
 
         # add a new column with iso_a2 codes to the world GeoDataFrame
-        world['iso_a2'] = world['iso_a3'].apply(lambda x: iso_lookup.loc[x]['alpha-2'] if x in iso_lookup.index else None)
+        world['iso_a2'] = world['iso_a3'] \
+                          .apply(lambda x: iso_lookup.loc[x]['alpha-2'] if x in iso_lookup.index else None)
 
         # map european countries under the same iso code for ease of data processing
         european_countries_iso_codes = world[world["continent"] == "Europe"]["iso_a2"]
@@ -92,7 +92,7 @@ class WorldMapETL:
         merged_df = geospatial_df.merge(country_price_df, left_on='iso_a2', right_on='country_iso')
         return merged_df.copy()
 
-    def generate_world_map(merged_df: pd.DataFrame):
+    def get_world_map(merged_df: pd.DataFrame):
         missing_countries = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
         missing_countries["steam_value"] = 0
         # Create a custom colormap that ranges from green to red
