@@ -12,8 +12,7 @@ from matplotlib.figure import Figure
 """
 TODO:
     1. Make sure the ETL executes
-    2. Split the conf for each ETL?
-    3. Parametrize all the necessary details (add to conf). Like image params or url
+    2. Parametrize all the necessary details (add to conf). Like image params or url
 """
 
 class WorldMapETLSourceConfig(NamedTuple):
