@@ -23,10 +23,21 @@ class WorldMapETLSourceConfig(NamedTuple):
     WorldMapETL
     """
     parquet_key: str
+    country_prices_cols: str
+    country_prices_perc_dif_col: str
+    country_prices_usd_dif_col: str
+    country_prices_usd_price_col: str
+    country_prices_alpha_2_col: str
     world_map_geopandas: str
-    iso_code_map: str
+    world_map_alpha_2_col: str
+    world_map_alpha_3_col: str
+    iso_code_map_url: str
     iso_code_map_cols: str
+    iso_code_map_alpha_2_col: str
+    iso_code_map_alpha_3_col: str
     plot_title: str
+    color_bar_args: dict
+    color_bar_min_max: str
     missing_countries_plot_args: dict
     world_map_prices_plot_args: dict
 
