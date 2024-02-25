@@ -64,29 +64,43 @@ class WorldMapETL:
         self._logger = logging.getLogger(__name__)
 
     def calculate_countries_averages(self, df: pd.DataFrame):
-        country_means_df = df[["country_iso", "usd_price"]] \
-                        .groupby("country_iso") \
-                        .agg({"usd_price": "mean"})
-        worlds_average_price = df["usd_price"].mean()
-        country_means_df["perc_dif"] = (country_means_df/worlds_average_price) - 1
-        country_means_df["usd_dif"] = country_means_df["perc_dif"] * worlds_average_price
+        # load conf args to prevent repetition
+        country_prices_alpha_2 = self.src_conf.country_prices_alpha_2_col
+        usd_price_col = self.src_conf.country_prices_usd_price_col
+        perc_dif_col = self.src_conf.country_prices_perc_dif_col
+        usd_dif_col = self.src_conf.country_prices_usd_dif_col
+
+        country_means_df = df[self.src_conf.country_prices_cols] \
+                                .groupby(country_prices_alpha_2) \
+                                .agg({usd_price_col: "mean"})
+        worlds_average_price = df[usd_price_col].mean()
+        country_means_df[perc_dif_col] = (country_means_df/worlds_average_price) - 1
+        country_means_df[usd_dif_col] = country_means_df[perc_dif_col] * worlds_average_price
         country_means_df.reset_index(inplace=True)
-        country_means_df["country_iso"].replace("uk", "gb", inplace=True)
-        country_means_df["country_iso"] = country_means_df["country_iso"].str.upper()
+        country_means_df[country_prices_alpha_2].replace("uk", "gb", inplace=True)
+        country_means_df[country_prices_alpha_2] = country_means_df[country_prices_alpha_2].str.upper()
         return country_means_df.copy()
 
-    def get_geospatial_df(self, geo_data_url: str):
-        world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+    def get_geospatial_df(self):
+        # load conf args to prevent repetition
+        world_iso_alpha_2 = self.src_conf.world_map_alpha_2_col
+        world_iso_alpha_3 = self.src_conf.world_map_alpha_3_col
+        iso_map_iso_alpha_2 = self.src_conf.iso_code_map_alpha_2_col
+        iso_map_iso_alpha_3 = self.src_conf.iso_code_map_alpha_3_col
+
+        # load world map
+        world = gpd.read_file(gpd.datasets.get_path(self.src_conf.world_map_geopandas))
         # create a lookup table to map iso_2_codes and iso_3_codes
-        iso_lookup = pd.read_csv(geo_data_url, usecols=['alpha-3', 'alpha-2'])
-        iso_lookup = iso_lookup.set_index('alpha-3')
+        iso_lookup = pd.read_csv(self.src_conf.iso_code_map_url,
+                                 usecols=self.src_conf.iso_code_map_cols)
+        iso_lookup = iso_lookup.set_index(iso_map_iso_alpha_3)
 
         # add a new column with iso_a2 codes to the world GeoDataFrame
-        world['iso_a2'] = world['iso_a3'] \
-                          .apply(lambda x: iso_lookup.loc[x]['alpha-2'] if x in iso_lookup.index else None)
+        world[world_iso_alpha_2] = world[world_iso_alpha_3] \
+                                   .apply(lambda x: iso_lookup.loc[x][iso_map_iso_alpha_2] if x in iso_lookup.index else None)
 
         # map european countries under the same iso code for ease of data processing
-        european_countries_iso_codes = world[world["continent"] == "Europe"]["iso_a2"]
+        european_countries_iso_codes = world[world["continent"] == "Europe"][world_iso_alpha_2]
         euro_countries = []
         for i, country_iso_code in european_countries_iso_codes.items():
             if country_iso_code:
@@ -95,26 +109,32 @@ class WorldMapETL:
                     euro_countries.append(country_iso_code.lower())
 
         # change euro countries' iso_2 code to EU so that they can be joined with the world_prices_df
-        world["iso_a2"] = world["iso_a2"][~world["iso_a2"].isna()] \
-                        .apply(lambda country_code: "EU" if country_code.lower() in euro_countries else country_code)
+        world[world_iso_alpha_2] = world[world_iso_alpha_2][~world[world_iso_alpha_2].isna()] \
+                                   .apply(lambda country_code: "EU" if country_code.lower() in euro_countries else country_code)
 
         return world.copy()
 
     def merge_geodata_with_prices(self,
                                   country_price_df: pd.DataFrame,
                                   geospatial_df):
-        country_price_df["country_iso"] = country_price_df["country_iso"].str.upper()
-        merged_df = geospatial_df.merge(country_price_df, left_on='iso_a2', right_on='country_iso')
+        # load conf args to prevent repetition
+        world_iso_alpha_2 = self.src_conf.world_map_alpha_2_col
+        country_prices_alpha_2 = self.src_conf.country_prices_alpha_2_col
+
+        merged_df = geospatial_df.merge(country_price_df, left_on=world_iso_alpha_2, right_on=country_prices_alpha_2)
         return merged_df.copy()
 
     def get_world_map(self, merged_df: pd.DataFrame):
-        missing_countries = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+        # load conf args to prevent repetition
+        usd_dif_col = self.src_conf.color_bar_min_max
+
+        missing_countries = gpd.read_file(gpd.datasets.get_path(self.src_conf.world_map_geopandas))
         missing_countries["steam_value"] = 0
         # Create a custom colormap that ranges from green to red
-        cmap = colors.LinearSegmentedColormap.from_list('green_to_red', [(0, 'green'), (1, 'red')])
+        cmap = colors.LinearSegmentedColormap.from_list(**self.src_conf.color_bar_args)
 
         # Normalize the data using vmin and vmax
-        norm = colors.Normalize(vmin=merged_df["usd_dif"].min(), vmax=merged_df["usd_dif"].max())
+        norm = colors.Normalize(vmin=merged_df[usd_dif_col].min(), vmax=merged_df[usd_dif_col].max())
         # Create a large plot
         fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -122,25 +142,17 @@ class WorldMapETL:
 
         # We make the legend as small and thin as possible
         divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="10%", pad=0.1)
+        cax = divider.append_axes(position="right", size="10%", pad=0.1)
 
         # we display the missing country data and the countries with data will be overriden by the merged_df plot
-        missing_countries.plot(column="steam_value",
-                               ax=ax, color="gray",
-                               linestyle='-',
-                               edgecolor='black',
-                               alpha=0.5)
-        merged_df.plot(column='usd_dif',
-                       ax=ax,
+        missing_countries.plot(ax=ax, **self.src_conf.missing_countries_plot_args)
+        merged_df.plot(ax=ax,
                        cmap=cmap,
                        norm=norm,
                        cax=cax,
-                       linewidth=0.5,
-                       linestyle='-',
-                       edgecolor='black',
-                       legend=True)
+                       **self.src_conf.world_map_prices_plot_args)
         ax.set_axis_off()
-        ax.set_title("Steam prices relative to world average in USD")
+        ax.set_title(self.src_conf.plot_title)
         return ax.get_figure()
 
     def save_current_fig(self,
@@ -160,7 +172,7 @@ class WorldMapETL:
                                                    f)
         df = pd.read_parquet(f)
         prices_df = self.calculate_countries_averages(df.copy())
-        world_map_df = self.get_geospatial_df(geo_data_url=self.src_conf.iso_code_map)
+        world_map_df = self.get_geospatial_df()
         merged_df = self.merge_geodata_with_prices(country_price_df=prices_df.copy(),
                                                    geospatial_df=world_map_df.copy())
         fig = self.get_world_map(merged_df=merged_df.copy())
