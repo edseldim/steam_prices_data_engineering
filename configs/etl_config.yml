@@ -41,10 +41,23 @@ steam_prices_etl:
 world_map_etl:
   source:
     parquet_key: 'steam_etl/'
+    country_prices_cols: ['country_iso','usd_price']
+    country_prices_usd_price_col: 'usd_price'
+    country_prices_alpha_2_col: 'country_iso'
+    country_prices_perc_dif_col: 'perc_dif'
+    country_prices_usd_dif_col: 'usd_dif'
     world_map_geopandas: "naturalearth_lowres"
-    iso_code_map: "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv"
+    world_map_alpha_2_col: 'iso_a2'
+    world_map_alpha_3_col: 'iso_a3'
+    iso_code_map_url: "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv"
     iso_code_map_cols: ['alpha-3', 'alpha-2']
+    iso_code_map_alpha_2_col: 'alpha-2'
+    iso_code_map_alpha_3_col: 'alpha-3'
     plot_title: "Steam prices relative to world average in USD"
+    color_bar_args:
+      name: 'green_to_red'
+      colors: [[0, 'green'], [1, 'red']]
+    color_bar_min_max: 'usd_dif'
     missing_countries_plot_args:
       column: "steam_value"
       color: "gray"
