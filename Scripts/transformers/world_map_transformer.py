@@ -138,13 +138,13 @@ class WorldMapETL:
         # Normalize the data using vmin and vmax
         norm = colors.Normalize(vmin=merged_df[usd_dif_col].min(), vmax=merged_df[usd_dif_col].max())
         # Create a large plot
-        fig, ax = plt.subplots(figsize=(10, 8))
+        fig, ax = plt.subplots(**self.src_conf.plot_args)
 
         from mpl_toolkits.axes_grid1 import make_axes_locatable
 
         # We make the legend as small and thin as possible
         divider = make_axes_locatable(ax)
-        cax = divider.append_axes(position="right", size="10%", pad=0.1)
+        cax = divider.append_axes(**self.src_conf.divider_plot_args)
 
         # we display the missing country data and the countries with data will be overriden by the merged_df plot
         missing_countries.plot(ax=ax, **self.src_conf.missing_countries_plot_args)
