@@ -21,6 +21,28 @@ class WorldMapETLSourceConfig(NamedTuple):
     """
     Object that represents the source configuration for
     WorldMapETL
+
+    :param parquet_key: the folder inside the target storage service
+    :param country_prices_cols: cols with the country price info
+    :param country_prices_perc_dif_col: col name for the percentual price difference from world average
+    :param country_prices_usd_dif_col: col name for the price difference from world average in usd
+    :param country_prices_usd_price_col: col name for the world's average
+    :param world_map_geopandas: geopandas built-in map name
+    :param country_prices_alpha_2_col: col name for countries code in ALPHA-2
+    :param country_prices_alpha_3_col: col name for countries code in ALPHA-3 (for geopandas built-in map)
+    :param iso_code_map_url: url for map that maps between ALPHA-2 and ALPHA-3 country codes
+    :param iso_code_map_cols: cols with ALPHA-2 and ALPHA-3 country codes for iso_code_map
+    :param iso_code_map_alpha_2_col: col with ALPHA-2 country codes
+    :param iso_code_map_alpha_3_col: col with ALPHA-3 country codes
+    :param plot_title: plot title name
+    :param color_bar_args: args from color bar
+    :param color_bar_min_max: col, from the df with countries and price difference from world average,
+                            that contains the price difference
+    :param missing_countries_plot_args: args to create the countries with no information geopandas plot
+    :param world_map_prices_plot_args: args to create the countries with price information geopandas plot
+    :param divider_plot_args: args to create the price divider plot
+    :param plot_args: args to create the empty canvas (plot) where all the maps are going to be drawn upon
+
     """
     parquet_key: str
     country_prices_cols: str
@@ -48,6 +70,12 @@ class WorldMapETLTargetConfig(NamedTuple):
     """
     Represents the target configuration for
     WorldMapETL
+
+    :param trg_key: the folder inside the target storage service
+    :param trg_key_filename: the filename for the data to be stored
+    :param trg_key_date_format: the filename date format in target storage service
+                            this one is appended to the filename at the end
+    :param trg_format: the filename format for the data to be stored
     """
     trg_key: str
     trg_key_date_format: str
