@@ -54,6 +54,8 @@ world_map_etl:
     iso_code_map_alpha_2_col: 'alpha-2'
     iso_code_map_alpha_3_col: 'alpha-3'
     plot_title: "Steam prices relative to world average in USD"
+    plot_args:
+      fig_size: (10, 8)
     color_bar_args:
       name: 'green_to_red'
       colors: [[0, 'green'], [1, 'red']]
@@ -70,6 +72,10 @@ world_map_etl:
       linestyle: '-'
       edgecolor: 'black'
       legend: True
+    divider_plot_args:
+      position: 'right'
+      size: '10%'
+      pad: 0.1
   target:
     trg_key: 'steam_etl/images/'
     trg_key_date_format: '%m%d%Y-%H:%M:%S'

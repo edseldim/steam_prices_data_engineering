@@ -40,6 +40,8 @@ class WorldMapETLSourceConfig(NamedTuple):
     color_bar_min_max: str
     missing_countries_plot_args: dict
     world_map_prices_plot_args: dict
+    divider_plot_args: dict
+    plot_args: dict
 
 
 class WorldMapETLTargetConfig(NamedTuple):
