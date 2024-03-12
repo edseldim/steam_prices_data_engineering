@@ -10,11 +10,11 @@ from common.external_resources import S3Bucket
 from matplotlib.figure import Figure
 from datetime import datetime
 from typing import NamedTuple
+from pandas import DataFrame
 
 """
 TODO:
-    1. Make sure the ETL executes
-    2. Parametrize all the necessary details (add to conf). Like image params or url
+    1. Parametrize all the necessary details (add to conf). Like image params or url
 """
 
 class WorldMapETLSourceConfig(NamedTuple):
@@ -84,16 +84,37 @@ class WorldMapETLTargetConfig(NamedTuple):
 
 class WorldMapETL:
 
+    """
+    Generates the world map using currency
+    data
+    """
+
     def __init__(self,
                  src_conf: WorldMapETLSourceConfig,
                  trg_conf: WorldMapETLTargetConfig,
                  s3_bucket: S3Bucket):
+        """
+        Constructor for WorldMapETL
+
+        :param s3_bucket: connection to s3 bucket api
+        :param src_conf: NamedTuple class with source configuration data
+        :param trg_conf: NamedTuple class with target configuration data
+        """
         self.src_conf = src_conf
         self.trg_conf = trg_conf
         self.s3_bucket = s3_bucket
         self._logger = logging.getLogger(__name__)
 
-    def calculate_countries_averages(self, df: pd.DataFrame):
+    def calculate_countries_averages(self, df: pd.DataFrame) -> DataFrame:
+        """
+        Calculates countries price deviation from world average
+
+        :param df: dataframe containing price data in usd.
+
+        :returns:
+            DataFrame: df containing country codes in ALPHA-2 and
+                       usd difference from world average.
+        """
         # load conf args to prevent repetition
         country_prices_alpha_2 = self.src_conf.country_prices_alpha_2_col
         usd_price_col = self.src_conf.country_prices_usd_price_col
@@ -112,6 +133,13 @@ class WorldMapETL:
         return country_means_df.copy()
 
     def get_geospatial_df(self):
+        """
+        Creates DataFrame containing geospatial info for each country.
+
+        :returns:
+            DataFrame: df containing geospatial data, for instance: Coordinates,
+                       countries ALPHA-2 and ALPHA-3, etc.
+        """
         # load conf args to prevent repetition
         world_iso_alpha_2 = self.src_conf.world_map_alpha_2_col
         world_iso_alpha_3 = self.src_conf.world_map_alpha_3_col
@@ -144,9 +172,19 @@ class WorldMapETL:
 
         return world.copy()
 
-    def merge_geodata_with_prices(self,
-                                  country_price_df: pd.DataFrame,
-                                  geospatial_df):
+    def _merge_geodata_with_prices(self,
+                                   country_price_df: DataFrame,
+                                   geospatial_df: DataFrame):
+        """
+        Joins country prices with geospatial data using ALPHA-2 iso codes.
+
+        :param geospatial_df: dataframe containing geospatial data for each country.
+        :param country_price_df: dataframe containing price data in usd.
+
+        :returns:
+            DataFrame: df containing geospatial data and
+                       usd difference from world average.
+        """
         # load conf args to prevent repetition
         world_iso_alpha_2 = self.src_conf.world_map_alpha_2_col
         country_prices_alpha_2 = self.src_conf.country_prices_alpha_2_col
@@ -154,7 +192,18 @@ class WorldMapETL:
         merged_df = geospatial_df.merge(country_price_df, left_on=world_iso_alpha_2, right_on=country_prices_alpha_2)
         return merged_df.copy()
 
-    def get_world_map(self, merged_df: pd.DataFrame):
+    def get_world_map(self, merged_df: pd.DataFrame) -> Figure:
+        """
+        Generates world map. ETL step, this is not the builder
+        method. Using it directly is not recommended.
+
+        :param merged_df: df containing geospatial data and
+                          usd difference from world average.
+
+        :returns:
+            Figure: Matplotlib object representation of a world map
+                    representing price data.
+        """
         # load conf args to prevent repetition
         usd_dif_col = self.src_conf.color_bar_min_max
 
@@ -188,10 +237,27 @@ class WorldMapETL:
     def save_current_fig(self,
                          fig: Figure,
                          filename: str,
-                         format="png"):
+                         format="png") -> bool:
+        """
+        Saves figure to external storage service
+
+        :param fig: matplotlib Figure representing world map.
+        :param filename: string with the filename the file will be stored in.
+                         DO NOT ADD THE DATA TYPE SUFFIX (.png)
+        :param format: file format. Supported formats: PNG
+
+
+        :returns:
+            bool: returns true if code was executed successfully
+        """
         self.s3_bucket.save_fig_to_png(fig, filename+"."+format)
+        return True
 
     def generate_world_map_image(self):
+        """
+        Builds world map image for different countries and saves it to
+        external storage service
+        """
         self._logger.info(f"Looking up last file in {self.src_conf.parquet_key}")
         last_processed_file = self.s3_bucket.get_bucket_filenames(bucket_name=self.s3_bucket.bucket_name,
                                                                   prefix=self.src_conf.parquet_key)[0]
@@ -203,8 +269,8 @@ class WorldMapETL:
         df = pd.read_parquet(f)
         prices_df = self.calculate_countries_averages(df.copy())
         world_map_df = self.get_geospatial_df()
-        merged_df = self.merge_geodata_with_prices(country_price_df=prices_df.copy(),
-                                                   geospatial_df=world_map_df.copy())
+        merged_df = self._merge_geodata_with_prices(country_price_df=prices_df.copy(),
+                                                    geospatial_df=world_map_df.copy())
         fig = self.get_world_map(merged_df=merged_df.copy())
 
         todays_date = datetime.now().strftime(self.trg_conf.trg_key_date_format)
