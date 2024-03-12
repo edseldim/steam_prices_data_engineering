@@ -72,6 +72,19 @@ class S3Bucket:
                              prefix: str,
                              same_level=True,
                              delimiter="/") -> list:
+        """
+        Returns filenames under prefix
+
+        :param bucket_name: S3 bucket name
+        :param prefix: "Folder" to retrieve filenames from
+        :param same_level: restricts the retrieved filenames to the ones under prefix. "Subfolders" are
+                           not taken into account.
+        :param delimiter: argument to get the "subfolders" in prefix. This is used to filter files
+                           in subfolders.
+
+        :returns:
+            list: strings containing filenames in prefix under aforementioned conditions
+        """
         filenames = []
         api_res = self.s3_session.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter=delimiter)
         result = api_res['Contents']
