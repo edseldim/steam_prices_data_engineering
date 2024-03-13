@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 from babel.numbers import get_territory_currencies
-from common.external_resources import S3Bucket
+from Scripts.common.external_resources import S3Bucket
 from matplotlib.figure import Figure
 from datetime import datetime
 from typing import NamedTuple

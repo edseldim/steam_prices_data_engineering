@@ -4,7 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from common.external_resources import SteamWebApi, OpenExRatesApi, S3Bucket
+from Scripts.common.external_resources import SteamWebApi, OpenExRatesApi, S3Bucket
 from datetime import datetime
 from typing import NamedTuple
 from pandas import DataFrame
