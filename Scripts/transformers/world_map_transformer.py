@@ -12,11 +12,6 @@ from datetime import datetime
 from typing import NamedTuple
 from pandas import DataFrame
 
-"""
-TODO:
-    1. Parametrize all the necessary details (add to conf). Like image params or url
-"""
-
 class WorldMapETLSourceConfig(NamedTuple):
     """
     Object that represents the source configuration for
