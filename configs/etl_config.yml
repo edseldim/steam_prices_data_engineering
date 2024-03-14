@@ -1,0 +1,99 @@
+steam_web_api:
+  endpoint: "https://store.steampowered.com/api/appdetails/"
+
+currency_ex_api:
+  endpoint: "https://openexchangerates.org/api/latest.json"
+  app_token: 'YOUR_OPEN_EXCHANGE_RATES_KEY'
+
+s3_bucket:
+  endpoint_url: 'https://nyc3.digitaloceanspaces.com'
+  region_name: 'nyc3'
+  bucket_name: 'YOUR_BUCKETS_NAME'
+  aws_access_key_id: 'AWS_ACCESS_KEY_ID'
+  aws_secret_access_key: 'AWS_SECRET_ACCESS_KEY'
+
+steam_prices_etl:
+  source:
+    base_currency: "USD"
+    ex_currencies:
+      "ar": "ARS"
+      "tr": "TRY"
+      "ru": "RUB"
+      "br": "BRL"
+      "ua": "UAH"
+      "no": "NOK"
+      "cn": "CNY"
+      "co": "COP"
+      "kz": "KZT"
+      "za": "ZAR"
+      "mx": "MXN"
+      "in": "INR"
+      "uy": "UYU"
+      "cl": "CLP"
+      "es": "EUR"
+    videogames_appids: [298110,552520,2369390,1245620,1238840,1091500,2138330,2239550,1174180,1811260,1547000,1546990,1546970,12210]
+  target:
+    trg_key: 'steam_etl/'
+    trg_key_date_format: '%m%d%Y-%H:%M:%S'
+    trg_key_filename: 'steam_etl_run'
+    trg_format: 'parquet'
+    trg_cols: ['app', 'country_iso', 'currency_steam', 'usd_price']
+
+world_map_etl:
+  source:
+    parquet_key: 'steam_etl/'
+    country_prices_cols: ['country_iso','usd_price']
+    country_prices_usd_price_col: 'usd_price'
+    country_prices_alpha_2_col: 'country_iso'
+    country_prices_alpha_3_col: 'alpha-3'
+    country_prices_perc_dif_col: 'perc_dif'
+    country_prices_usd_dif_col: 'usd_dif'
+    world_map_geopandas: "naturalearth_lowres"
+    world_map_alpha_2_col: 'iso_a2'
+    world_map_alpha_3_col: 'iso_a3'
+    iso_code_map_url: "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv"
+    iso_code_map_cols: ['alpha-3', 'alpha-2']
+    iso_code_map_alpha_2_col: 'alpha-2'
+    iso_code_map_alpha_3_col: 'alpha-3'
+    plot_title: "Steam prices relative to world average in USD"
+    plot_args:
+      figsize: [10, 8]
+    color_bar_args:
+      name: 'green_to_red'
+      colors: [[0, 'green'], [1, 'red']]
+    color_bar_min_max: 'usd_dif'
+    missing_countries_plot_args:
+      column: "steam_value"
+      color: "gray"
+      linestyle: '-'
+      edgecolor: 'black'
+      alpha: 0.5
+    world_map_prices_plot_args:
+      column: 'usd_dif'
+      linewidth: 0.5
+      linestyle: '-'
+      edgecolor: 'black'
+      legend: True
+    divider_plot_args:
+      position: 'right'
+      size: '10%'
+      pad: 0.1
+  target:
+    trg_key: 'steam_etl/images/'
+    trg_key_date_format: '%m%d%Y-%H:%M:%S'
+    trg_key_filename: 'world_map_run'
+    trg_format: 'png'
+
+logging:
+  version: 1
+  formatters:
+    main_etl:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: main_etl
+      level: DEBUG
+  root:
+    level: DEBUG
+    handlers: [console]
