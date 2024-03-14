@@ -30,6 +30,7 @@ steam_prices_etl:
       "in": "INR"
       "uy": "UYU"
       "cl": "CLP"
+      "es": "EUR"
     videogames_appids: [298110,552520,2369390,1245620,1238840,1091500,2138330,2239550,1174180,1811260,1547000,1546990,1546970,12210]
   target:
     trg_key: 'steam_etl/'
@@ -44,6 +45,7 @@ world_map_etl:
     country_prices_cols: ['country_iso','usd_price']
     country_prices_usd_price_col: 'usd_price'
     country_prices_alpha_2_col: 'country_iso'
+    country_prices_alpha_3_col: 'alpha-3'
     country_prices_perc_dif_col: 'perc_dif'
     country_prices_usd_dif_col: 'usd_dif'
     world_map_geopandas: "naturalearth_lowres"

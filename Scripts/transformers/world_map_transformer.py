@@ -132,6 +132,21 @@ class WorldMapETL:
         country_means_df[country_prices_alpha_2] = country_means_df[country_prices_alpha_2].str.upper()
         return country_means_df.copy()
 
+    def _get_alpha_3_from_2(self,
+                            df: pd.DataFrame) -> pd.DataFrame:
+        iso_map_iso_alpha_2 = self.src_conf.iso_code_map_alpha_2_col
+        iso_map_iso_alpha_3 = self.src_conf.iso_code_map_alpha_3_col
+        country_prices_alpha_2_col = self.src_conf.country_prices_alpha_2_col
+        country_prices_alpha_3_col = self.src_conf.country_prices_alpha_3_col
+        # create a lookup table to map iso_2_codes and iso_3_codes
+        iso_lookup = pd.read_csv(self.src_conf.iso_code_map_url,
+                                 usecols=self.src_conf.iso_code_map_cols)
+        iso_lookup = iso_lookup.set_index(iso_map_iso_alpha_2)
+        # add a new column with iso_a2 codes to the world GeoDataFrame
+        df[country_prices_alpha_3_col] = df[country_prices_alpha_2_col] \
+                                         .apply(lambda x: iso_lookup.loc[x][iso_map_iso_alpha_3] if x in iso_lookup.index else None)
+        return df
+
     def get_geospatial_df(self):
         """
         Creates DataFrame containing geospatial info for each country.
