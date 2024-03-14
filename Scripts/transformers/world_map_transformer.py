@@ -50,6 +50,7 @@ class WorldMapETLSourceConfig(NamedTuple):
     country_prices_usd_dif_col: str
     country_prices_usd_price_col: str
     country_prices_alpha_2_col: str
+    country_prices_alpha_3_col: str
     world_map_geopandas: str
     world_map_alpha_2_col: str
     world_map_alpha_3_col: str
@@ -201,10 +202,18 @@ class WorldMapETL:
                        usd difference from world average.
         """
         # load conf args to prevent repetition
+        usd_dif_col = self.src_conf.country_prices_usd_dif_col
         world_iso_alpha_2 = self.src_conf.world_map_alpha_2_col
-        country_prices_alpha_2 = self.src_conf.country_prices_alpha_2_col
+        world_iso_alpha_3 = self.src_conf.world_map_alpha_3_col
+        country_prices_alpha_3 = self.src_conf.country_prices_alpha_3_col
 
-        merged_df = geospatial_df.merge(country_price_df, left_on=world_iso_alpha_2, right_on=country_prices_alpha_2)
+        merged_df = geospatial_df.merge(country_price_df,
+                                        how="left",
+                                        left_on=world_iso_alpha_3,
+                                        right_on=country_prices_alpha_3)
+        # propagate price across EU countries
+        eu_price = merged_df[merged_df[world_iso_alpha_2] == "EU"][usd_dif_col].max()
+        merged_df.loc[merged_df[world_iso_alpha_2] == "EU", usd_dif_col] = eu_price
         return merged_df.copy()
 
     def get_world_map(self, merged_df: pd.DataFrame) -> Figure:
@@ -283,6 +292,7 @@ class WorldMapETL:
                                                    f)
         df = pd.read_parquet(f)
         prices_df = self.calculate_countries_averages(df.copy())
+        prices_df = self._get_alpha_3_from_2(prices_df.copy())
         world_map_df = self.get_geospatial_df()
         merged_df = self._merge_geodata_with_prices(country_price_df=prices_df.copy(),
                                                     geospatial_df=world_map_df.copy())
